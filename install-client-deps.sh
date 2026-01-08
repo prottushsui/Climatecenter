@@ -3,7 +3,7 @@
 
 echo "Installing client dependencies..."
 cd /workspace/client
-npm install
+npm install --no-audit --no-fund --legacy-peer-deps --maxsockets 1
 
 if [ $? -eq 0 ]; then
     echo "Client dependencies installed successfully!"
