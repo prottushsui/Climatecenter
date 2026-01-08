@@ -9,7 +9,9 @@
     "server": "nodemon server.js",
     "client": "cd client && npm run dev",
     "build": "npm run build --prefix client",
-    "install-all": "npm install && cd client && npm install"
+    "install-all": "npm install && cd client && npm install",
+    "setup": "bash setup-dev-environment.sh",
+    "setup-start": "bash setup-dev-environment.sh start"
   },
   "keywords": ["climate", "carbon", "tracker", "news", "community"],
   "author": "Climate Engagement Platform",
