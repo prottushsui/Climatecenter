@@ -63,6 +63,34 @@ The application uses PostgreSQL with the following tables:
 
 ## Setup Instructions
 
+### Automated Setup (Recommended)
+
+The easiest way to set up the development environment is to run the automated setup script:
+
+```bash
+# Make the script executable
+chmod +x setup-dev-environment.sh
+
+# Run the setup script
+./setup-dev-environment.sh
+
+# Or run the setup and start development servers in one command
+./setup-dev-environment.sh start
+```
+
+The setup script will:
+- Check Node.js version compatibility
+- Free up ports 5000 (backend) and 5173 (frontend) if they're in use
+- Validate environment variables
+- Install all dependencies for both root and client
+- Handle database setup (import schema from db_schema.sql)
+- Build the frontend
+- Optionally start development servers
+
+### Manual Setup
+
+If you prefer to set up manually:
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>
@@ -89,6 +117,7 @@ DB_NAME=climate_platform
 DB_PASSWORD=your_db_password
 DB_PORT=5432
 JWT_SECRET=your_jwt_secret
+NEWS_API_KEY=your_news_api_key (optional but recommended)
 PORT=5000
 ```
 
@@ -101,7 +130,7 @@ Run the SQL commands from `db_schema.sql` to create the necessary tables.
 npm run dev
 ```
 
-This will start both the backend server on port 5000 and the frontend development server on port 3000 with proxy configuration.
+This will start both the backend server on port 5000 and the frontend development server on port 5173.
 
 ## Running the Application
 
