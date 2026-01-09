@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth');
 const carbonRoutes = require('./routes/carbon');
 const newsRoutes = require('./routes/news');
 const communityRoutes = require('./routes/community');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -54,6 +55,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/carbon', carbonRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/admin', adminRoutes);
 
 // In development, don't serve the frontend from the backend
 if (isProduction) {

@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }) => {
       setToken(token);
       setUser(user);
       
-      return { success: true };
+      return { success: true, user };
     } catch (error) {
       return { 
         success: false, 
@@ -93,13 +93,18 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const isAdmin = () => {
+    return user && user.role === 'admin';
+  };
+
   const value = {
     user,
     token,
     login,
     register,
     logout,
-    loading
+    loading,
+    isAdmin
   };
 
   return (
