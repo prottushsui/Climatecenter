@@ -5,10 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "NODE_ENV=development concurrently \"npm run server\" \"npm run client\"",
+    "dev:windows": "set NODE_ENV=development && concurrently \"npm run server\" \"npm run client\"",
     "server": "nodemon server.js",
     "client": "cd client && npm run dev",
-    "build": "npm run build --prefix client",
+    "build": "cd client && npm run build",
+    "postinstall": "cd client && npm install",
     "install-all": "npm install && cd client && npm install",
     "setup": "bash setup-dev-environment.sh",
     "setup-start": "bash setup-dev-environment.sh start"
