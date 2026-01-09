@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import AdminNav from './AdminNav';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -19,6 +20,9 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Admin Navigation Bar */}
+      <AdminNav />
+      
       {/* Mobile sidebar toggle */}
       <div className="md:hidden fixed top-4 left-4 z-50">
         <button
