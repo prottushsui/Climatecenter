@@ -1,39 +1,16 @@
 const express = require('express');
-const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
+const { query } = require('../config/db');
+const { authenticateToken } = require('../middleware/auth');
+const { CARBON_EMISSION_FACTORS } = require('../utils/constants');
 require('dotenv').config();
 
 const router = express.Router();
 
-// PostgreSQL connection
-const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'climate_platform',
-  password: process.env.DB_PASSWORD || 'postgres',
-  port: process.env.DB_PORT || 5432,
-});
-
-// Middleware to verify JWT token
-const authenticateToken = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  if (!token) {
-    return res.status(401).json({ message: 'Access denied. No token provided.' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'climate_secret_key');
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({ message: 'Invalid token.' });
-  }
-};
-
 // Get user's carbon entries
 router.get('/entries', authenticateToken, async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await query(
       'SELECT * FROM carbon_entries WHERE user_id = $1 ORDER BY date DESC',
       [req.user.userId]
     );
@@ -54,19 +31,19 @@ router.post('/entries', authenticateToken, async (req, res) => {
     let calculated_emissions = 0;
     switch (category) {
       case 'transport':
-        calculated_emissions = value * 0.2; // kg CO2 per km
+        calculated_emissions = value * CARBON_EMISSION_FACTORS.transport;
         break;
       case 'food':
-        calculated_emissions = value * 1.5; // kg CO2 per kg of food
+        calculated_emissions = value * CARBON_EMISSION_FACTORS.food;
         break;
       case 'energy':
-        calculated_emissions = value * 0.5; // kg CO2 per kWh
+        calculated_emissions = value * CARBON_EMISSION_FACTORS.energy;
         break;
       default:
         calculated_emissions = value;
     }
 
-    const result = await pool.query(
+    const result = await query(
       'INSERT INTO carbon_entries (user_id, category, value, calculated_emissions, date) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [req.user.userId, category, value, calculated_emissions, date || new Date()]
     );
@@ -88,19 +65,19 @@ router.put('/entries/:id', authenticateToken, async (req, res) => {
     let calculated_emissions = 0;
     switch (category) {
       case 'transport':
-        calculated_emissions = value * 0.2;
+        calculated_emissions = value * CARBON_EMISSION_FACTORS.transport;
         break;
       case 'food':
-        calculated_emissions = value * 1.5;
+        calculated_emissions = value * CARBON_EMISSION_FACTORS.food;
         break;
       case 'energy':
-        calculated_emissions = value * 0.5;
+        calculated_emissions = value * CARBON_EMISSION_FACTORS.energy;
         break;
       default:
         calculated_emissions = value;
     }
 
-    const result = await pool.query(
+    const result = await query(
       'UPDATE carbon_entries SET category = $1, value = $2, calculated_emissions = $3, date = $4 WHERE id = $5 AND user_id = $6 RETURNING *',
       [category, value, calculated_emissions, date, id, req.user.userId]
     );
@@ -121,7 +98,7 @@ router.delete('/entries/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await pool.query(
+    const result = await query(
       'DELETE FROM carbon_entries WHERE id = $1 AND user_id = $2 RETURNING *',
       [id, req.user.userId]
     );
@@ -141,13 +118,13 @@ router.delete('/entries/:id', authenticateToken, async (req, res) => {
 router.get('/analytics', authenticateToken, async (req, res) => {
   try {
     // Get total emissions by category
-    const totalByCategory = await pool.query(
+    const totalByCategory = await query(
       'SELECT category, SUM(calculated_emissions) as total_emissions FROM carbon_entries WHERE user_id = $1 GROUP BY category',
       [req.user.userId]
     );
 
     // Get monthly emissions for the last 6 months
-    const monthlyEmissions = await pool.query(
+    const monthlyEmissions = await query(
       `SELECT 
         DATE_TRUNC('month', date) as month,
         SUM(calculated_emissions) as total_emissions
@@ -160,7 +137,7 @@ router.get('/analytics', authenticateToken, async (req, res) => {
     );
 
     // Get total carbon footprint
-    const totalFootprint = await pool.query(
+    const totalFootprint = await query(
       'SELECT SUM(calculated_emissions) as total FROM carbon_entries WHERE user_id = $1',
       [req.user.userId]
     );

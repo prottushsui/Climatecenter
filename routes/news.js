@@ -1,55 +1,32 @@
 const express = require('express');
-const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
+const { query } = require('../config/db');
+const { authenticateToken } = require('../middleware/auth');
+const { HTTP_STATUS } = require('../utils/constants');
 require('dotenv').config();
 
 const router = express.Router();
-
-// PostgreSQL connection
-const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'climate_platform',
-  password: process.env.DB_PASSWORD || 'postgres',
-  port: process.env.DB_PORT || 5432,
-});
-
-// Middleware to verify JWT token
-const authenticateToken = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  if (!token) {
-    return res.status(401).json({ message: 'Access denied. No token provided.' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'climate_secret_key');
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({ message: 'Invalid token.' });
-  }
-};
 
 // Get all news articles
 router.get('/articles', async (req, res) => {
   try {
     const { category, limit = 20, offset = 0 } = req.query;
     
-    let query = 'SELECT * FROM news_articles';
+    let queryStr = 'SELECT * FROM news_articles';
     const params = [];
     let paramIndex = 1;
     
     if (category) {
-      query += ` WHERE category = $${paramIndex}`;
+      queryStr += ` WHERE category = $${paramIndex}`;
       params.push(category);
       paramIndex++;
     }
     
-    query += ' ORDER BY published_at DESC LIMIT $' + paramIndex + ' OFFSET $' + (paramIndex + 1);
+    queryStr += ' ORDER BY published_at DESC LIMIT $' + paramIndex + ' OFFSET $' + (paramIndex + 1);
     params.push(parseInt(limit), parseInt(offset));
     
-    const result = await pool.query(query, params);
+    const result = await query(queryStr, params);
     
     res.json(result.rows);
   } catch (error) {
