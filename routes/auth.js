@@ -1,20 +1,12 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { Pool } = require('pg');
 const Joi = require('joi');
+const { query } = require('../config/db');
+const { HTTP_STATUS } = require('../utils/constants');
 require('dotenv').config();
 
 const router = express.Router();
-
-// PostgreSQL connection
-const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'climate_platform',
-  password: process.env.DB_PASSWORD || 'postgres',
-  port: process.env.DB_PORT || 5432,
-});
 
 // Validation schemas
 const registerSchema = Joi.object({
@@ -39,7 +31,7 @@ router.post('/register', async (req, res) => {
     const { email, password, name } = req.body;
 
     // Check if user already exists
-    const existingUser = await pool.query(
+    const existingUser = await query(
       'SELECT id FROM users WHERE email = $1',
       [email]
     );
@@ -53,7 +45,7 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
-    const result = await pool.query(
+    const result = await query(
       'INSERT INTO users (email, password_hash, name, role, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name',
       [email, hashedPassword, name, 'user', new Date()]
     );
@@ -92,7 +84,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     // Find user
-    const result = await pool.query(
+    const result = await query(
       'SELECT id, email, password_hash, name, role FROM users WHERE email = $1',
       [email]
     );
@@ -141,7 +133,7 @@ router.get('/me', async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'climate_secret_key');
     
-    const result = await pool.query(
+    const result = await query(
       'SELECT id, email, name, role, created_at FROM users WHERE id = $1',
       [decoded.userId]
     );
